@@ -1,0 +1,21 @@
+Imagens do Docker
+
+docker pull ubuntu - UBUNTU
+docker pull postgres - POSTGRES
+docker pull python - PYTHON
+docker pull node - NODE.JS
+docker pull httpd - APACHE
+docker pull mongo - MONGODB
+docker pull mysql - MYSQL
+docker pull Docker - DOCKER
+docker pull mariadb - MARIADB
+docker pull Ruby - RUBY
+docker pull wordpress - WORDPRESS
+docker pull debian - DEBIAN
+docker pull php - PHP
+docker pull centos - CENTOS
+docker pull maven - MAVEN
+docker pull perl - PERL
+docker pull composer - COMPOSER
+docker pull openjdk - OPENJDK
+docker pull SWIFT - SWIFT

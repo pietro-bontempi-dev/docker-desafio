@@ -1,0 +1,854 @@
+Passo a Passo VM Ubuntu Server
+
+Configurações
+Rede: Adapter1 / Bridget Adapter / wlp3sO
+
+System:
+Base Memory / 4000MB
+Boot Order: Floppy, Optical, hard Disk
+
+
+Display:
+Video Memory / 2MB-16MB
+
+Pegar o IP da máquina para fazer o acesso remoto.
+
+Entrar no diretório de usuário da máquina.
+
+ssh root@ipmaquina
+senha
+
+cat /etc/*release*
+
+
+Baixar Docker de acordo com a versão do Ubuntu
+
+Usar script Docker para instalação
+
+docker version
+systemctl status docker
+
+----------------------------------------------------------------
+
+Puxando Imagens
+
+docker pull hello-world
+docker images
+docker run hello-world
+docker ps
+docker ps -a
+
+-------------------------------------------------------------
+
+Executando Container
+
+docker pull ubuntu
+docker images
+docker run ubuntu
+docker ps
+docker ps -a
+docker run ubuntu sleep 10
+docker ps -a
+docker run ubuntu 1500
+(nova guia da linha de comando)
+ssh root@ipmaquina
+senha
+docker ps
+docker stop (names ou id)
+(voltar na guia anterior)
+docker ps -a
+(voltar para a guia 2)
+docker run --help
+clear
+docker run -it ubuntu
+ls -l
+cat /etc/*release*
+exit
+docker ps
+docker ps -a
+
+-------------------------------------------------------------
+
+Executando aplicações no container
+
+docker --help
+docker run --help
+docker run -dti ubuntu
+docker ps
+docker exec -it (nome ou id) /bin/bash
+apt update
+apt upgrade
+apt -y installl nano
+nano arquivo.txt
+ctrl+x
+exit
+docker ps
+docker exec -it id ou nome /bin/bash
+nano
+exit
+docker exec -it id ou nome cat /etc/*release*
+docker stop id ou nome
+
+-------------------------------------------------------------
+
+Excluindo e nomeando containers
+
+docker ps 
+docker ps -a
+docker rm (id ou nome dos container que desejar excluir)
+docker images
+docker rmi hello-world(exclui imagem)
+docker images
+docker run -dti centos
+docker ps
+docker images
+docker stop nome ou id
+docker rm id ou nome
+(dando nomes)
+docker run -dti --name Ubuntu-A ubuntu
+docker run -dti --name CentOS-a centos
+docker run -dti --name Ubuntu-B ubuntu
+docker ps
+
+--------------------------------------------------------------
+
+Copiando arquivos para o container
+
+ls
+docker exec -ti Ubuntu-A /bin/bash
+mkdir /destino
+rm -R destino/
+exit
+docker exec Ubuntu-A mkdir /destino
+docker exec Ubuntu-A ls /
+docker --help
+ls -l
+docker cp Meuarquivo.txt Ubuntu-A/destino
+docker cp ecev Ubuntu-A ls /destino -l
+apt install -y zip
+zip Meuzip.zip *.txt
+ls -l
+docker cp Meuzip.zip Ubuntu-A:/destino
+docker exec -it Ubuntu-A /bin/bash
+cd /destino/
+ls
+apt update
+apt upgrade
+ls-l
+unzip Meuzip.zip
+ls -l
+
+
+--------------------------------------------------------------
+
+Copiando arquivos do Container
+
+docker cp Ubuntu-A:/destino/Meuzip.zip Zipcopia.zip
+
+--------------------------------------------------------------
+
+TAGs
+
+(acessar hub.docker.com ir para debian)
+
+docker pull debian:9
+docker images
+docker run - dti debian:9
+docker ps
+docer stop id ou nome
+docker rm nome ou id
+docker ps -a
+
+--------------------------------------------------------------
+
+Criando um container do MySQL
+
+(acessar hub.docker.com ir para mysql)
+docker pull mysql
+docker images
+docker run --help
+docker run -e MYSQL_ROOT_PASSWORD=Senha123 --name mysql-A -d -p 3306:3306 mysql
+docker ps
+docker exec -it mysql-A bash
+ls
+mysql -u root -p --protocol=tcp
+(Vai pedir a senha, colocar a senha definida anteriormente, se ele não conseguir conectar é pq o serviço ainda não subiu, tente de novo)
+CREATE DATABASE aula;
+show database;
+exit
+exit
+docker ps
+ip a
+docker inspect mysql-A
+apt -y install mysql-client
+mysql -u root -p --protocol=tcp
+(senha definida)
+show databases
+exit
+docker ps
+
+--------------------------------------------------------------
+
+Acessando um Container externamente
+
+ip a (anotar ip)
+
+(Agora no computador físico, instalar MySQL Workbench)
+new connection(Definir nome, host(ip), nome do db(aula), user(root), pass, port)
+Testar Querys diferentes
+
+--------------------------------------------------------------
+
+Parando e Reiniciando um Container
+
+docker ps
+docker stop mysql-A
+docker ps -a
+docker start mysql-A
+mysql -u root -p --protocol=tcp
+use aula
+select * from alunos;
+exit
+docker stop mysql-A
+docker rm mysql-A(perde os dados)
+
+--------------------------------------------------------------
+
+Montando mount um local de armazenamento
+
+docker ps (verificar se o bd ainda existe)
+docker inspect mysql-A(Procurar item chamado volume em Mounts, e pegar também o destinations)
+mkdir /data
+mkdir /data/mysql
+docker os
+docker stop mysql-A
+docker rm mysql-A
+docker run -e MYSQL_ROOT_PASSWORD=Senha123 --name mysql-A -d -p 3306:3306 --volume=/data/mysql-A:/var/lib/mysql mysql
+ls /data/mysql-A/
+mysql -u root -p --protocol=tcp --port=3306
+(senha)
+create database aula;
+use aula
+create table alunos(alunoID int, nome varchar(50), sobrenome varchar(50), endereço varchar(150), cidade varchar(50));
+insert into alunos (alunoID, nome, sobrenome, endereço, cidade) values (1, 'Pietro', 'Bontempi', 'Rua 1', 'São Paulo');
+select * from alunos;
+exit
+docker stop mysql
+docker stop mysql-A
+docker rm mysql-A
+ls /data/mysql-A/
+clear
+docker run -e MYSQL_ROOT_PASSWORD=Senha123 --name mysql-A -d -p 3306:3306 --volume=/data/mysql-A:/var/lib/mysql mysql
+mysql -u root -p --protocol=tcp --port=3306
+use aula
+select * from alunos;
+
+--------------------------------------------------------------
+
+Tipos de mount bind, named, dockerfile volume
+BIND
+As montagens Bind são basicamente apenas vincular um determinado diretório ou arquivo do host dentro do container
+docker run -v /hostdir:/containerdir mysql
+
+NAMED
+Volumes nomeados são volumes que você cria manualmente com o comando:
+docker volume create nome-do-volume
+Eles são criados em /var/lib/docker/volumes e podem ser referenciados apenas por seu nome.
+Digamos que seja criado um volume chamado "mysql_data", você pode apenas referenciá-lo como o comando:
+docker run -v mysql_data:/containerdir mysql
+
+DOCKERFILE VOLUME
+Tipo de volume que são criados pela instrução VOLUME. Esses volumes também são criados em /var/lib/docke/volumes , mas não tem um determinado nome. O volume é criado ao executar o container e são úteis para salvar dados persistentes. O desenvolvedor pode dizer onde estão os dados importantes e o que deve ser persistente.
+
+--------------------------------------------------------------
+
+Exemplos práticos dos tipos de mount
+
+cd /data
+ls -l
+(exemplo do que foi feito como modelo bind)
+docker run -dti --mount type=bind,src=/data/debian-A,dst=/data debian
+docker ps
+docker exec -ti nome_imagem bash
+ls -l
+cd /data
+ls
+touch arquivo3.txt
+ls -l
+exit
+docker ps
+docker stop nome_imagem
+docker run -dti --mount type=bind,src=/data/debian-A,dst=/data, ro debian
+docker ps
+docker exec -ti nome_imagem bash
+cd /data
+rm arquivo3.txt
+touch arquivo4.txt
+exit
+
+DOCKER VOLUME
+
+docker volume ls
+docker volume create data-debian
+docker volume ls
+cd /var/lib/docker
+cd /volumes
+ls
+cd data-debian/
+ls
+cd _data/
+ls
+touch arquivo1.txt
+touch arquivo2.txt
+ls
+clear
+docker run --mount -dti --name debian0A type=volume,src=data-debian,dst=/data debian
+docker ps
+docker -ti exec debian0A baseh
+ls
+cd /data
+ls
+touch arquivo3.txt
+exit
+ls
+docker run -dti --mount type=volume,src=data-debian, dst=/data --name debian-B debian
+ls -l
+docker exec -ti debia-B bash
+ls
+cd /data
+ls
+touch arquivo4.txt
+ls
+exit
+ls
+docker ps
+docker stop debian-B
+docker rm debian-B
+docker stop debian0A
+docker rm debian0A
+docker volume rm data-debian
+docker volumes
+
+--------------------------------------------------------------
+
+Mount: Conclusão
+
+docker volume create centos-A
+docker volume ls
+docker run -dti --mount type=volume,src=centos-A.dst=/data --name centos-A centos
+docker ps
+docker inspect centos-A
+docker rm -f centos-A
+docker volume prune 
+docker ps
+docker stop id
+docker ps -a 
+docker container prune
+docker ps
+docker ps -a
+docker images
+
+--------------------------------------------------------------
+
+Exemplo Apache Container
+
+docker pull httpd
+mkdir /data/apache-A
+cd /data/apache-A
+nano index.html
+(inserir código html)
+docker run --name apache-A -d -p 80:80 --volume=/data/apache-A:/usr/local/apache2/htdocs httpd
+acessar a página: ip a
+
+--------------------------------------------------------------
+
+Exemplo PHP - Apache
+
+docker pull php:7.4-apache
+cd ..
+mkdir php-A
+docker run --name php-A -d -p 8080:80 --volume=/data/php-A:/var/www/html php:7.4-apache
+ls
+cd php-A
+nano index.php
+(inserir código php)
+acessar a página: ip a
+
+--------------------------------------------------------------
+
+Limitando memória e CPU
+
+docker ps
+docker stats php-A
+docker update php-A -m 128M --cpus 0.2
+docker stats php-A
+docker run --name ubuntu-C -dti -m 128M --cpus 0.2 ubuntu
+docker ps
+docker stats ubuntu-C
+docker exec -ti ubuntu-C bash
+apt update
+apt -y install stress
+stress --help
+stress --cpu 1 --vm-bytes 50m --vm 1 --vm-bytes 50m
+docker ps
+docker stats ubuntu-C
+stress --cpu 1 --vm-bytes 150m --vm 1 --vm-bytes 100m
+
+--------------------------------------------------------------
+
+Informações, logs e processos
+
+docker info
+docker ps
+docker container logs nome_container
+docker container top nome_container
+
+--------------------------------------------------------------
+
+Redes
+
+ip a
+docker network --help
+docker network ls
+docker network inspect bridge
+docker run exec -ti Ubuntu-A bash
+ping
+apt-get update
+apt-get install -y iputils-ping
+ping (ip container)
+exit
+docker rm -f Ubuntu-A Ubuntu-B
+docker ps
+docker network create minha-rede
+docker run -dti --name Ubuntu-A --network minha-rede ubuntu
+docker network inspect bridge
+docker run -dti --name Ubuntu-B --network minha-rede ubuntu
+docker network inspect minha-rede
+docker network inspect bridge
+docker run exec -ti Ubuntu-A bash
+apt-get update
+apt-get install -y iputils-ping
+ping (ip container)
+exit
+docker rm -f Ubuntu-A Ubuntu-B
+docker network --help
+docker network rm minha-rede
+
+--------------------------------------------------------------
+
+Primeiro Docker File
+
+docker run -dti --name ubuntu-python ubuntu
+docker exec -ti ubuntu-python bash
+apt update
+apt install -y python3 nano
+apt clean
+cd /opt
+nano app.py
+Digitar o seguinte código python:
+nome = input("Qual eh o seu nome?")
+print nome
+python3 app.py
+exit
+docker ps
+docker exec -ti ubuntu-python python3 /opt/app.py
+docker stop ubuntu-python
+docker rm ubuntu-python
+mkdir /images
+cd /images
+mkdir ubuntu-python
+cd ubuntu-python
+ls
+nano app.py
+Digitar o seguinte código python:
+nome = input("Qual eh o seu nome?")
+print nome
+ls -l
+nano dockerfile
+Digite o código:
+FROM ubuntu
+
+RUN apt update && apt install -y python3 && apt clean
+
+COPY app.py /opt/app.py
+
+CMD python3 /opt/app.py
+ls -l
+docker build . -t ubuntu-python
+docker images
+docker run -ti --name meu-app ubuntu-python
+docker ps
+docker ps -a
+
+--------------------------------------------------------------
+
+Criando uma imagem personalizada do Apache
+
+pwd
+ls
+mkdir debian-apache
+cd debian-apache/
+ls
+mkdir site
+ls
+cd site/
+wget http://site2368633667.hospedagemdesites.ws/site1.zip
+unzip site1.zip
+rm site1.zip
+ls
+tar -czf site.tar ./
+ls -l
+cp site.tar ../
+cd ../
+ls
+rm - Rf site
+ls
+nano Dockerfile
+FROM debian
+
+RUN apt-get update && apt-get install -y apache2 && apt-get clean
+
+ENV APACHE_LOCK_DIR="var/lock"
+ENV APACHE_PID_FILE="var/run/apache2.pid"
+ENV APACHE_RUN_USER="www-data"
+ENV APACHE_RUN_GROUP="www-data"
+ENV APACHE_LOG_DIR="/var/log/apache2"
+
+ADD site.tar /var/www/html
+
+LABEL description = "Apache webserver 1.0"
+VOLUME /var/www/html
+
+EXPOSE 80
+
+ENTRYPOINT ["/usr/sbin/apachectl"]
+CMD ["-D" , "FOREGROUND"]
+
+
+docker image build -t debian-apache:1.0 .
+docker images
+docker run -dti -p 80:80 --name meu-apache debian-apache:1.0
+docker ps
+docker rm -f id
+docker run -dti -p 80:80 --name meu-apache debian-apache:1.0
+docker ps
+ip a
+digitar ip do site no navegador
+
+--------------------------------------------------------------
+
+Criando imagens personalizadas a partir de imagens de linguagens de programação
+
+Docker pull python
+Docker images
+ls
+mkdir python
+cd python
+nano app.py
+
+nome = input("Qual o seu nome?")
+print (nome)
+nano Dockerfile
+FROM python
+
+WORKDIR /usr/src/app
+
+COPY app.py /usr/src/app
+
+CMD ["python" , "./app.py"]
+
+docker image build -t app-python:1.0
+docker images
+docker run -ti --name runapp1 app-python:1.0
+
+--------------------------------------------------------------
+
+Gerando uma imagem Multistage
+
+mkdir go
+cd go
+docker pull golang
+docker pull alpine
+docker images
+nano app.go
+
+package main
+import (
+	"fmt"
+)
+
+func main(){
+	fmt.Println("Qual é o seu nome:? ")
+	var name string
+	fmt.Scanln(&name)
+	fmt.Printf("Oi, %s! Eu sou a linguagem Go! ", name)
+}
+
+nano Dockerfile
+
+FROM golang as  exec
+
+COPY app.go /go/src/app/
+
+ENV GO111MODULE=auto
+
+WORKDIR /go/src/app/
+
+RUN go build -o app.go .
+
+FROM alpine
+
+WORKDIR /appexec
+
+COPY --from=exec /go/src/app/ /appexec
+
+RUN chmod -R 755 /appexec
+ENTRYPOINT ./app.go
+
+docker image build -t app-go :1.0 .
+docker images
+docker run -ti --name meuappOK app-go:1.0
+
+--------------------------------------------------------------
+
+Realizando o upload de imagens para o hub do Docker
+
+docker rmi -f id da imagem
+docker login
+docker build . -t nomeusuario/my-go-app:1.0
+docker images
+docker push nomeusuario/my-go-app:1.0
+
+--------------------------------------------------------------
+
+Registry Criando um servidor de imagens
+
+Criar uma outra máquina virtual (IMAGE SERVER)
+ip a para descobrir o ip da maquina
+na maquina nova:
+docker run -d -p 5000:5000 --restart=aways --name registry registry:2
+docker ps
+Maquina antiga:
+docker images
+docker logout
+docker image tag (id da imagem criada na ultima aula) (ip da maquina nova(servidor)/my-go-app:1.0)
+docker images
+curl ipmaquinaantiga/v2/_catalog
+docker push ip/my-go-app:1.0
+nano /etc/docker/daemon.json
+{"insecure-registries":["ip"]}
+systemctl restart docker
+docker push ip/my-go-app:1.0
+curl ipmaquinaantiga/v2/_catalog
+docker rmi -f id da imagem
+docker pull ip/my-go-app:1.0
+
+--------------------------------------------------------------
+
+Introdução e Instalação do Docker Compose
+
+Definição:
+Ferramenta desenvolvida para ajudar a definir e compartilhar aplicativos com vários containers. Com o Compose, você pode criar um arquivo YAML para definir os serviços e com um único comando, pode rodar ou parar todos os containers.
+
+apt-get install -y docker-compose
+docker-compose --help
+docker-compose --version
+
+--------------------------------------------------------------
+
+Docker Compose exemplo prático
+
+cd /data
+ls
+mkdir mysql-C
+cd ..
+mkdir /composse
+cd composse
+ls
+mkdir primeiro
+cd primeiro/
+ls
+nano docker-compose.yml
+version: '3.8'
+
+services:
+  mysqlsrv:
+    image: mysql:5.7
+    environment:
+      MYSQL_ROOT_PASSWORD: "Senha123"
+      MYSQL_DATABASE: "testedb"
+    ports:
+      - "3306:3306"
+    volumes:
+      - /data/mysql-C:/var/lib/mysql
+    networks:
+      - minha-rede
+
+  adminer:
+    image: adminer
+    ports:
+      - 8080:8080
+    networks:
+      - minha-rede
+
+networks: 
+  minha-rede:
+    driver: bridge
+
+docker rm -f ((ips)se tiver container usando as portas especificadas utilizar esse comando)
+docker-compose up -d
+docker os
+testar no web com ip da máquina e portas definidas
+
+--------------------------------------------------------------
+
+Docker composse down
+
+docker ps
+docker-compose down
+docker network ls
+docker ps -a
+docker-compose up
+ctrl+c
+docker-composse up -d
+docker ps
+docker network ls
+
+--------------------------------------------------------------
+
+Exemplo PHP Apache MySQL
+
+cd /data
+ls
+mkdir php
+cd php
+ls
+cd ..
+rm - Rf php
+ls
+pwd
+mkdir php
+ls
+cd php
+nano index.php
+<html>
+
+<head>
+<title>Exemplo PHP</title>
+</head>
+
+
+<?php
+ini_set("display_errors", 1);
+header('Content-Type: text/html; charset=iso-8859-1');
+
+
+
+echo 'Versao Atual do PHP: ' . phpversion() . '<br>';
+
+$servername = "db";
+$username = "root";
+$password = "Senha123";
+$database = "testedb";
+
+// Criar conexão
+
+
+$link = new mysqli($servername, $username, $password, $database);
+
+/* check connection */
+if (mysqli_connect_errno()) {
+    printf("Connect failed: %s\n", mysqli_connect_error());
+    exit();
+}
+
+$query = "SELECT * FROM tabela_exemplo";
+
+if ($result = mysqli_query($link, $query)) {
+
+    
+    while ($row = mysqli_fetch_assoc($result)) {
+        printf ("%s %s %s <br>", $row["nome"], $row["cidade"], $row["salario"]);
+    }
+
+    
+    mysqli_free_result($result);
+}
+
+
+mysqli_close($link);
+
+?>
+
+</html>
+
+ls
+mkdir admin
+ls
+cd admin
+nano uploads.ini
+file_uploads = On
+memory_limit = 500M
+upload_max_filesize = 500M
+post_max_size = 500M
+max_execution_time = 600
+max_file_uploads = 50000
+max_execution_time = 5000
+max_input_time = 5000
+ls
+cd /data
+ls
+cd mysql-C
+cd composse
+ls
+mkdir php-mysql
+cd php-mysql
+nano docker.composer.yml
+
+version: "3.7"
+
+services:
+  web:
+    image: webdevops/php-apache:alpine-php7
+    ports:
+      - "4500:80"
+    volumes:
+      - /data/php/:/app
+
+    networks:
+      - minha-rede
+
+  db:
+    image: mysql:5.7
+    environment:
+      MYSQL_ROOT_PASSWORD: "Senha123"
+      MYSQL_DATABASE: "testedb"
+    ports:
+      - "3306:3306"
+    volumes:
+      - /data/mysql-C:/var/lib/mysql
+
+    networks:
+      - minha-rede
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    environment:
+      MYSQL_ROOT_PASSWORD: "Senha123"
+    ports:
+      - "8080:80"
+    volumes:
+      - /data/php/admin/uploads.ini:/usr/local/etc/php/conf.d/php-phpmyadmin.ini
+
+    networks:
+      - minha-rede
+
+networks:
+   minha-rede:
+     driver: bridge
+
+docker-compose up -d
+acessar com ip
+docker ps -a
+
+--------------------------------------------------------------
